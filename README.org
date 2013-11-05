@@ -1,0 +1,131 @@
+#+STARTUP: hidestars showall
+* utf8
+  Byte vector backed, utf8 strings for Clojure.
+
+  To use this for a Leiningen project
+
+  : [pjstadig/utf8 "0.1.0"]
+
+  Or for a Maven project
+
+  : <dependency>
+  :   <groupId>pjstadig</groupId>
+  :   <artifactId>utf8</artifactId>
+  :   <version>0.1.0</version>
+  : </dependency>
+
+** Creating utf8 strings
+   utf8 strings can be created using the ~utf8-str~ function.
+
+   : pjstadig.utf8> (utf8-str "foo")
+   : #<Utf8String foo>
+
+   Pass more than one argument to ~utf8-str~, and it will concatenate all the
+   arguments into one utf8 string.
+
+   : pjstadig.utf8> (utf8-str "foo" " " "bar")
+   : #<Utf8String foo bar>
+
+   You can get the empty version of a utf8 string (after all it's a persistent
+   collection) by calling ~utf8-str~ with no arguments.
+
+   : pjstadig.utf8> (utf8-str)
+   : #<Utf8String >
+
+   utf8 strings are backed by Clojure's byte vectors, and can be appended at the
+   end efficiently.
+   
+   : pjstadig.utf8> (conj (utf8-str "foo") \b)
+   : #<Utf8String foob>
+
+   You can get a String back out of a utf8 string using ~str~
+
+   : pjstadig.utf8> (str (utf8-str "foo"))
+   : "foo"
+** utf8 strings as persistent collections
+   You can use ~into~
+   
+   : pjstadig.utf8> (into (utf8-str "foo") (utf8-str "bar"))
+   : #<Utf8String foobar>
+   
+   A utf8 string is a ~CharSequence~ and calling ~seq~ on it gets you a lazy seq
+   of chars (duh!).
+
+   : pjstadig.utf8> (seq (utf8-str "foo"))
+   : (\f \o \o)
+
+   You can use sequence operations on a utf8 string
+
+   : pjstadig.utf8> (first (utf8-str "foo"))
+   : \f
+   : pjstadig.utf8> (rest (utf8-str "foo"))
+   : (\o \o)
+   : pjstadig.utf8> (map int (utf8-str "foo"))
+   : (102 111 111)
+** utf8 strings as CharSequences
+   Since utf8 strings are ~CharSequences~ and deal with chars (though the chars
+   are stored in utf8), you can mix utf8 strings and String strings.
+
+   : pjstadig.utf8> (into (utf8-str "foo") "bar")
+   : #<Utf8String foobar>
+   : pjstadig.utf8> (clojure.string/join " " [(utf8-str "foo") (utf8-str "bar")])
+   : "foo bar"
+
+   Though, as you can see in that last case, the result is a String, so you have
+   to manually convert it back to a utf8 string.
+
+   : pjstadig.utf8> (utf8-str (clojure.string/join " " [(utf8-str "foo") (utf8-str "bar")]))
+   : #<Utf8String foo bar>
+
+   You can even match regular expressions against them (surprise!)
+
+   : pjstadig.utf8> (re-matches #"foo" (utf8-str "foo"))
+   : "foo"
+   : pjstadig.utf8> (re-matches #"bar" (utf8-str "foo"))
+   : nil
+** Other stuff
+   utf8 strings define the normal ~equals~ and ~hashCode~ methods, so you can
+   compare them and stuff them in hash maps
+
+   : pjstadig.utf8> (= (utf8-str "foo") (utf8-str "foo"))
+   : true
+   : pjstadig.utf8> (map hash [(utf8-str "foo") (utf8-str "foo")])
+   : (101574 101574)
+   : pjstadig.utf8> (get {(utf8-str "foo") :foo} (utf8-str "foo"))
+   : :foo
+
+   The equals comparison is done character by character; not byte by byte.  The
+   usual Unicode normalization caveats apply.  (However, since utf8 strings
+   implement CharSequence you can use java.text.Normalizer! :))
+   
+   utf8 strings will only compare as equal to their own kind.  So
+
+   : pjstadig.utf8> (= (utf8-str "foo") "foo")
+   : false
+   
+   If this makes you sad, then realize that this will always be false
+
+   : pjstadig.utf8> (= "foo" (utf8-str "foo"))
+   : false
+
+   So unless/until Clojure's ~=~ is defined as an open protocol, we can't make
+   Strings equal to utf8 strings.
+
+   As a consolation you can compare sequences of characters
+
+   : pjstadig.utf8> (= (seq "foo") (seq (utf8-str "foo")))
+   : true
+   : pjstadig.utf8> (= (seq (utf8-str "foo")) (seq "foo"))
+   : true
+** What's next?
+   You tell me.  I was thinking maybe a reader literal.  What else would be
+   useful?
+** License
+  : Copyright © 2013 Paul Stadig. All rights reserved.
+  : 
+  : This Source Code Form is subject to the terms of the Mozilla Public License,
+  : v. 2.0. If a copy of the MPL was not distributed with this file, You can
+  : obtain one at http://mozilla.org/MPL/2.0/.
+  : 
+  : This Source Code Form is "Incompatible With Secondary Licenses", as defined
+  : by the Mozilla Public License, v. 2.0.
