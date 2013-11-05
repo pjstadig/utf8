@@ -42,6 +42,11 @@
 
    : pjstadig.utf8> (str (utf8-str "foo"))
    : "foo"
+
+   It also handles surrogate pairs
+   
+   : pjstadig.utf8> (into (utf8-str) "\ud852\udf62¢€")
+   : #<Utf8String 𤭢¢€>
 ** utf8 strings as persistent collections
    You can use ~into~
    
@@ -83,6 +88,26 @@
    : "foo"
    : pjstadig.utf8> (re-matches #"bar" (utf8-str "foo"))
    : nil
+** What about a java.io.Writer implementation?
+   Glad you asked.  You can get a Writer by calling ~utf8-writer~, and it will
+   directly encode and store as utf8 every character you write to it.  So you
+   can stream characters into a utf8 string without having to use two bytes of
+   storage for each ASCII character.
+
+   You just write a bunch of stuff to it, then call ~utf8-str~ on it when you're
+   done.
+
+   : pjstadig.utf8> (let [w (utf8-writer)] (with-open [f (clojure.java.io/reader "/etc/hosts")] (clojure.java.io/copy f w)) (utf8-str w))
+   : #<Utf8String 127.0.0.1	localhost
+   : 127.0.1.1	jane
+   : 
+   : # The following lines are desirable for IPv6 capable hosts
+   : ::1     ip6-localhost ip6-loopback
+   : fe00::0 ip6-localnet
+   : ff00::0 ip6-mcastprefix
+   : ff02::1 ip6-allnodes
+   : ff02::2 ip6-allrouters
+   : >
 ** Other stuff
    utf8 strings define the normal ~equals~ and ~hashCode~ methods, so you can
    compare them and stuff them in hash maps
@@ -117,6 +142,10 @@
    : true
    : pjstadig.utf8> (= (seq (utf8-str "foo")) (seq "foo"))
    : true
+** What are the downsides?
+   Well like any use of utf8, counting and indexing characters is O(n).  It may
+   be possible to store a count so that counting can be constant time, but we'll
+   see.
 ** What's next?
    You tell me.  I was thinking maybe a reader literal.  What else would be
    useful?
