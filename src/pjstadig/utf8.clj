@@ -9,9 +9,10 @@
 (ns pjstadig.utf8
   (:require [nio.core :as nio]
             [pjstadig.utf8.protocol :refer [IUtf8String] :as p])
-  (:import (java.nio Buffer)))
+  (:import (java.nio Buffer)
+           (java.nio.charset Charset)))
 
-(def charset (java.nio.charset.Charset/forName "utf-8"))
+(def ^Charset charset (java.nio.charset.Charset/forName "utf-8"))
 
 (defn one-byte-start? [b]
   (let [b (int b)]
@@ -37,7 +38,7 @@
   (->> char-seq
        (map unchecked-char)
        char-array
-       nio/buffer
+       nio/char-buffer
        (.encode charset)
        nio/buffer-seq))
 
@@ -45,7 +46,7 @@
   (->> byte-seq
        (map unchecked-byte)
        byte-array
-       nio/buffer
+       nio/byte-buffer
        (.decode charset)
        nio/buffer-seq))
 
@@ -92,7 +93,7 @@
                     vector))]
       (if (seq s)
         (recur (unchecked-add-int (unchecked-multiply-int h 31)
-                                  (.hashCode (first s)))
+                                  (.hashCode ^Object (first s)))
                (rest s))
         h)))
   (toString [this]
