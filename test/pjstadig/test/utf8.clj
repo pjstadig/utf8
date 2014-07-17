@@ -46,7 +46,8 @@
   (is (= [(char 0xd852) (char 0xdf62) \¢ \€]
          (seq (utf8-str "\ud852\udf62¢€"))))
   (is (= [\? \? \? \¢ \€]
-         (char-seq (drop 1 (.vector (utf8-str "\ud852\udf62¢€")))))))
+         (let [v (.vector (utf8-str "\ud852\udf62¢€"))]
+           (char-seq (subvec v 1 (count v)))))))
 
 (deftest test-byte-seq
   (is (= (map unchecked-byte [2r11110000 2r10100100 2r10101101 2r10100010

@@ -50,20 +50,26 @@
        (.decode charset)
        nio/buffer-seq))
 
-(defn char-seq [byte-seq]
+(defn char-seq [byte-vec]
   (lazy-seq
-   (when (seq byte-seq)
-     (cond
-      (one-byte-start? (first byte-seq))
-      (concat [(char (first byte-seq))] (char-seq (rest byte-seq)))
-      (two-byte-start? (first byte-seq))
-      (concat (bytes->chars (take 2 byte-seq)) (char-seq (drop 2 byte-seq)))
-      (three-byte-start? (first byte-seq))
-      (concat (bytes->chars (take 3 byte-seq)) (char-seq (drop 3 byte-seq)))
-      (four-byte-start? (first byte-seq))
-      (concat (bytes->chars (take 4 byte-seq)) (char-seq (drop 4 byte-seq)))
-      :else
-      (concat [\?] (char-seq (rest byte-seq)))))))
+   (let [c (count byte-vec)]
+     (when (pos? c)
+       (let [f (nth byte-vec 0)]
+         (cond
+          (one-byte-start? f)
+          (concat [(char f)]
+                  (char-seq (subvec byte-vec 1 c)))
+          (two-byte-start? f)
+          (concat (bytes->chars (subvec byte-vec 0 2))
+                  (char-seq (subvec byte-vec 2 c)))
+          (three-byte-start? f)
+          (concat (bytes->chars (subvec byte-vec 0 3))
+                  (char-seq (subvec byte-vec 3 c)))
+          (four-byte-start? f)
+          (concat (bytes->chars (subvec byte-vec 0 4))
+                  (char-seq (subvec byte-vec 4 c)))
+          :else
+          (concat [\?] (char-seq (subvec byte-vec 1 c)))))))))
 
 (defn byte-seq [char-seq]
   (lazy-seq
