@@ -1,4 +1,4 @@
-(defproject pjstadig/utf8 "0.1.0"
+(defproject pjstadig/utf8 "0.2.0-SNAPSHOT"
   :description "Byte vector backed, utf8 strings for Clojure."
   :url "http://github.com/pjstadig/utf8/"
   :license {:name "Mozilla Public License, v. 2.0"
